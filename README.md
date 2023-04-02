@@ -69,3 +69,95 @@
 你需要在classification-basic-sample-master项目中创建一个data文件夹
 
 修改好参数就可以进行测试训练了      ❗❗❗不光训练集需要修改，验证集也采用同样的增广❗❗❗
+
+你应该得到以下的结果
+
+![1  2](https://user-images.githubusercontent.com/128702185/229298959-2c999d37-d731-448e-b3a5-5c5600921f3f.png)
+
+✔对单张图片进行图像增广
+-----------------------------------------------------------------------------------------------------------------------------------------
+在PyCharm中的classification-basic-sample-master项目中新建一个py文件，输入代码
+
+    import torchvision.transforms as transforms
+    from PIL import Image
+    import matplotlib.pyplot as plt
+    
+    
+    img = Image.open('data/train/train/15.jpg')
+    img.show()
+    augment = transforms.Compose(
+      [
+            # 随机水平翻转，概率50%
+         transforms.RandomHorizontalFlip(p=0.5),
+            # 随机旋转
+           transforms.RandomRotation(degrees=(-10, 10)),
+            # 随机裁切
+         transforms.RandomResizedCrop(256)
+        ]
+    )
+
+    for i in range(1,10):
+        plt.subplot(3,3,i)
+        plt.imshow(augment(img))
+    plt.show()
+    
+如果需要别的增广操作，可以参考[数据增广训练模型]进行参数修改   
+
+运行代码你会得到一个MATLAB的Figure窗口
+
+![image](https://user-images.githubusercontent.com/128702185/229299586-90b1aaf5-30e7-4a93-9d12-68715b3688b9.png)
+
+✔对cifar数据集进行数据增广
+-----------------------------------------------------------------------------------------------------------------------------------------
+在PyCharm中的classification-basic-sample-master项目中新建一个py文件，输入代码
+
+    import torch
+    import torchvision
+    import torchvision.transforms as transforms
+
+    # 定义数据增广
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),  # 随机裁剪
+        transforms.RandomHorizontalFlip(),    # 随机水平翻转
+        transforms.RandomRotation(15),        # 随机旋转
+        transforms.ToTensor(),                # 转换为张量
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # 标准化
+    ])
+
+    # 加载 CIFAR-10 数据集并进行数据增广
+    trainset = torchvision.datasets.CIFAR10(root='./data', train=True,
+                                           download=True, transform=transform_train)
+
+    # 保存增广后的数据
+    torch.save(trainset, './data/cifar10_augmented.pt')
+    
+ 这里使用了 Compose 函数将多个数据增广操作组合起来。可以根据需求添加或调整这些增广操作。最后使用 torch.save() 将增广后的数据集保存到本地。你需要提前创建一个 ./data 文件夹。   
+
+你会得到以下结果
+
+![捕获1111](https://user-images.githubusercontent.com/128702185/229334974-2dcdc2fa-038a-4fcd-be20-8f4e0a4f6d96.PNG)
+
+完成训练后你会在你创建的data文件夹中看到两个文件，下载的cifar数据和完成增广后的数据
+
+![image](https://user-images.githubusercontent.com/128702185/229334933-7814d3b4-ee98-47be-bbc7-e95da3e2eb23.png)
+
+✔拓展
+-----------------------------------------------------------------------------------------------------------------------------------------
+.pt文件是pytorch中常用的模型保存、加载和传递的文件格式，保存的是模型对象和相关参数。可以通过torch.load()方法将.pt文件加载成pytorch的模型对象并进行后续的操作。
+
+可以使用以下代码将.pt文件中的一张图片保存为.jpg文件：
+
+    import torch
+
+    # Load the tensor object from the .pt file
+    tensor = torch.load('./data/cifar10_augmented.pt')[0][0]
+
+    # Convert the tensor object to an RGB PIL image
+    image = transforms.ToPILImage()(tensor)
+
+    # Save the image as a .jpg file
+    image.save('./data/image.jpg')
+    
+这个代码会将第一张图片从.pt文件中读取出来，并将其转换成PIL图片格式。然后使用PIL库将图片保存为.jpg格式
+
+![image](https://user-images.githubusercontent.com/128702185/229335127-21497803-ee5a-4c26-bdf7-fc81b739908d.png)
